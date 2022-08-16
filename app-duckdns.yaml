@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: duckdns
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-duckdns
+  namespace: duckdns
+data:
+  token: <YOURTOKEN>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: duckdns
+  namespace: duckdns
+  labels:
+    app: duckdns
+spec:
+  selector:
+    matchLabels:
+      app: duckdns
+  replicas: 1
+  progressDeadlineSeconds: 60
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: duckdns
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: duckdns
+          image: ghcr.io/linuxserver/duckdns
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: secret-duckdns
+                  key: token
+            - name: SUBDOMAINS
+              value: <YOURSUBDOMAINS>
